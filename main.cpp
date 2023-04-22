@@ -14,6 +14,8 @@ public:
     NeuralNetwork(const vector<int> &layers, const vector<string> &activationStrings) {
         srand(time(NULL));
         unsigned layerSize = layers.size();
+        if (layerSize != activationStrings.size())
+            throw invalid_argument("The layers and activation vectors must be constant");
         activations.reserve(layerSize);
         network.reserve(layerSize);
         bias.reserve(layerSize);
@@ -41,6 +43,10 @@ public:
         }
     }
     void Learn(const vector<vector<float>> &inputData, const vector<vector<float>> &outputData, const int &epochs, const float &learningRate, const float batchSizePercent) {
+        if (inputData.size() != outputData.size())
+            throw invalid_argument("InputData Size must equal OutputData size");
+        if (batchSizePercent > 1)
+            throw length_error("Batch Size Percentage cannot be about 1");
         cout << "Learning Started... " << endl;
         unsigned dataSize = inputData.size();
         int batchSize = static_cast<int>(dataSize * batchSizePercent);
@@ -68,6 +74,8 @@ public:
     }
 
     void Test(const vector<vector<float>> &inputData, const vector<vector<float>> &outputData, char test) {
+        if (inputData.size() != outputData.size())
+            throw invalid_argument("InputData Size must equal OutputData size");
         cout << "Testing..." << endl;
         unsigned dataSize = inputData.size();
         unsigned outputDataSize = outputData[0].size();
@@ -123,6 +131,8 @@ public:
         cout << "--------------\nPercentage Correct: " << percentage << "% \nTotal Correct: " << totalCorrect << "/" << totalSize << "\n--------------" << endl;
     }
     vector<float> getOutputs(const vector<float> &inputVals) {
+        if (inputVals.size() != network.begin()->size())
+            throw invalid_argument("InputVals size must equal the the size of the network inputs");
         feedForward(inputVals);
         unsigned outputSize = network.back().size();
         vector<float> outputs(outputSize);
@@ -193,8 +203,6 @@ private:
             }
         }
     }
-
-
     static float activation(const float x, const int n) {
         switch(n) {
             case 0:
@@ -209,7 +217,6 @@ private:
                 return x;
         };
     }
-
     static float activationDerivative(const float x, const int n) {
         switch (n) {
             case 0: {
@@ -231,9 +238,6 @@ private:
             }
         };
     }
-
-
-
     static vector<vector<vector<float>>> getBatch(const vector<vector<float>> &inputData, const vector<vector<float>> &outputData, const int batchSize) {
         unsigned dataSize = inputData.size();
         vector<vector<vector<float>>> batch;
@@ -328,7 +332,7 @@ int main() {
         {1},
     };
     NeuralNetwork net(layers, activations);
-    net.Learn(inputs, expectedOutputs, 100000, 0.01f, 0.5f);
+    net.Learn(inputs, expectedOutputs, 50000, 0.01f, 0.5f);
     for (auto &input : inputs) {
         cout << "Input: ";
         for (auto &inputVal : input) {
